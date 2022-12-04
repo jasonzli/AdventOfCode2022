@@ -2,25 +2,33 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace Scenes.Day_01
 {
     public class Solver : MonoBehaviour
     {
         [SerializeField] private string _textAssetPath;
+
+        [SerializeField] private AssetReference _addressableTextAsset = null;
         // Start is called before the first frame update
         void Start()
         {
-        
-        }
+            _addressableTextAsset.LoadAssetAsync<TextAsset>().Completed += handle =>
+            {
+                Debug.Log($"Length: {handle.Result.text.Length}");
 
-        string[] CreateCalorieListFromTextInput(string path)
-        {
-            // Get the file at the path
+                TextAsset inputAsset = handle.Result;
 
-            // Go through line by line and make an Elf for each group, breaking up based on empty lines
-            return new string[] { };
-            
+                string[] allLines = inputAsset.text.Split('\n');
+
+                Debug.Log($"Lines: {allLines.Length}");
+
+                int[] calorieGroup;
+                
+                
+                Addressables.Release(handle); // Need to call this to release the asset stream(?)
+            };
         }
 
         List<Elf> CreateElfList(string[] calorieList)
@@ -34,6 +42,8 @@ namespace Scenes.Day_01
         int FindHighestCalorieLoad(IEnumerable<Elf> listOfElves)
         {
             int highestCalorieLoad = -1;
+            
+            //highestCalorieLoad = listOfElves.Max(elf => elf.TotalCalories);
             foreach (Elf elf in listOfElves)
             {
                 if (highestCalorieLoad < elf.TotalCalories)
@@ -41,8 +51,6 @@ namespace Scenes.Day_01
                     highestCalorieLoad = elf.TotalCalories;
                 }
             }
-
-            //highestCalorieLoad = listOfElves.Max(elf => elf.TotalCalories);
 
             return highestCalorieLoad;
         }
