@@ -34,6 +34,17 @@ namespace Scenes.Day_02
                 int score = games.Sum(game => game.YourResult());
                 
                 Debug.Log($"Score: {score}");
+                
+                //create games from all lines
+                List<GameRevised> revisedGames = new List<GameRevised>();
+                foreach (string line in allLines)
+                {
+                    revisedGames.Add(new GameRevised(line));
+                }
+
+                int revisedScore = revisedGames.Sum(game => game.YourResult());
+                
+                Debug.Log($"Revised Score: {revisedScore}");
             };
             
         }
@@ -88,6 +99,82 @@ namespace Scenes.Day_02
                     case "X": return 1;
                     case "Y": return 2;
                     case "Z": return 3;
+                    default: return 0;
+                }
+            }
+        }
+        
+        class GameRevised
+        {
+            private string _firstPlayerChoice;
+            private string _secondPlayerChoice;
+
+            //X means you need to lose
+            //Y means you need to draw
+            //Z means you need to win
+            
+            // Rock : A , A
+            // Paper: B , B
+            // Scissors: C , C
+            private static Dictionary<string, int> resultsDictionary = new Dictionary<string, int>
+            {
+                {"AA", 3}, // Rock Rock
+                {"AB", 6}, // Rock Paper
+                {"AC", 0}, // Rock Scissors
+                {"BA", 0}, // Paper Rock
+                {"BB", 3}, // Paper Paper
+                {"BC", 6}, // Paper Scissors
+                {"CA", 6}, // Scissors Rock
+                {"CB", 0}, // Scissors Paper
+                {"CC", 3}, // Scissors Scissors
+            };
+            
+            private static Dictionary<string, string> ChoiceFromResult = new Dictionary<string, string>
+            {
+                {"AX", "C"}, //Lose
+                {"AY", "A"}, //Tie
+                {"AZ", "B"}, //Win
+                {"BX", "A"}, //Lose
+                {"BY", "B"}, //Tie
+                {"BZ", "C"}, //Win
+                {"CX", "B"}, //Lose
+                {"CY", "C"}, //Tie
+                {"CZ", "A"}, //Win
+            };
+
+            public GameRevised(string choices)
+            {
+                string[] choicesArray = choices.Split(' ');
+                _firstPlayerChoice = choicesArray[0];
+
+                string choiceAndResult = _firstPlayerChoice + choicesArray[1];
+                _secondPlayerChoice = ChoiceFromResult[choiceAndResult.Trim()];
+
+            }
+            
+
+            public int YourResult()
+            {
+                int scoreBasedOnChoice = ValueOfChoice();
+                int scoreFromGame = ValueOfGame();
+
+                return scoreFromGame + scoreBasedOnChoice;
+            }
+
+            private int ValueOfGame()
+            {
+                string key = _firstPlayerChoice+ _secondPlayerChoice;
+                key = key.Trim();
+                return resultsDictionary[key];
+            }
+            
+            private int ValueOfChoice()
+            {
+                switch (_secondPlayerChoice.Trim())
+                {
+                    case "A": return 1;
+                    case "B": return 2;
+                    case "C": return 3;
                     default: return 0;
                 }
             }
