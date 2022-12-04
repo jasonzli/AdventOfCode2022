@@ -45,8 +45,6 @@ namespace Scenes.Day_01
                 Addressables.Release(handle); // Need to call this to release the asset stream(?)
             };
 
-
-            
         }
 
         List<Elf> CreateElvesFromInputs(string[] lineInput)
