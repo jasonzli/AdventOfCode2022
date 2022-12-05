@@ -13,7 +13,8 @@ namespace SharedUtility
         {
             TextAsset inputAsset = text;
 
-            string[] allLines = inputAsset.text.Split('\n');
+            string[] lineSeparators = new string[] { "\r\n" };
+            string[] allLines = inputAsset.text.Split(lineSeparators, System.StringSplitOptions.None);
 
             Debug.Log($"Lines: {allLines.Length}");
 
