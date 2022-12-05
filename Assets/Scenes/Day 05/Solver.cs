@@ -82,7 +82,9 @@ namespace Scenes.Day_05
                     int fromColumn = int.Parse(match.Groups[2].Value);
                     int toColumn = int.Parse(match.Groups[3].Value);
                     
-                    MoveCratesBetweenStacks(numberOfCrates, stacks[fromColumn-1], stacks[toColumn-1]);
+                    //MoveCratesBetweenStacks(numberOfCrates, stacks[fromColumn-1], stacks[toColumn-1]);
+                    MoveCratesBetweenStacksWithOrderRetention(numberOfCrates, stacks[fromColumn - 1],
+                        stacks[toColumn - 1]);
                 }
             }
             
@@ -115,9 +117,23 @@ namespace Scenes.Day_05
             }
         }
 
-        private void MoveCratesBetweenStacksWithQueue(int quantity, Stack<Crate> origin, Stack<Crate> target)
+        private void MoveCratesBetweenStacksWithOrderRetention(int quantity, Stack<Crate> origin, Stack<Crate> target)
         {
+            // Create a stack of objects that will get moved into the new stack
+
+            Stack<Crate> cratesToMove = new Stack<Crate>();
+            for (int i = 0; i < quantity; i++)
+            {
+                cratesToMove.Push(origin.Pop());
+            }
             
+            // then move the stack onto the new stack
+            // move all crates from cratesToMove onto target
+
+            for (int i = 0; i < quantity; i++)
+            {
+                target.Push(cratesToMove.Pop());
+            }
         }
     }
 }
