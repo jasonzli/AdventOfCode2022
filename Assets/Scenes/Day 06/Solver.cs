@@ -31,14 +31,14 @@ namespace Scenes.Day_06
            int index = -1;
            foreach (string input in inputs)
            {
-               index = IndexOfFirstFourUniqueCharactersInString(input,4);
+               index = IndexOfFirstUniqueCharactersInString(input,4);
            }
            
            Debug.Log($"The index of the unique 4 character string is {index}");
            
            foreach (string input in inputs)
            {
-               index = IndexOfFirstFourUniqueCharactersInString(input,14);
+               index = IndexOfFirstUniqueCharactersInString(input,14);
            }
            
            
@@ -46,7 +46,7 @@ namespace Scenes.Day_06
 
         }
 
-        int IndexOfFirstFourUniqueCharactersInString(string input, int length)
+        int IndexOfFirstUniqueCharactersInString(string input, int length)
         {
             for (int i = 0; i < input.Length; i++)
             {
