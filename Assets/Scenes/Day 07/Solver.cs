@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using SharedUtility;
 using UnityEngine;
@@ -100,12 +101,26 @@ namespace Scenes.Day_07
             
             // Print the sum of all directories from allDirectories whose size is at most 100000
             Debug.Log($"Total size: {allDirectories.Values.Where(directory => directory.DirectorySize() <= 100000).Sum(directory => directory.DirectorySize())}");
+
+
+            int totalSpace = 70000000;
+            int neededSpace = 30000000;
+            int usedSpace = system["/"].DirectorySize();
+            int freeSpace = totalSpace - usedSpace;
+            int spaceDeficit = Math.Abs(neededSpace - freeSpace);
+            Directory smallestViableDirectory = allDirectories.Values
+                .Where(directory => directory.DirectorySize() >= spaceDeficit)
+                .OrderBy(directory => directory.DirectorySize()).First();
+            
+            // Find the smallest directory that can be deleted to free up enough space
+            Debug.Log($"Smallest directory that can be deleted to free up enough space is {smallestViableDirectory.FullName} with size {smallestViableDirectory.DirectorySize()}");
+
         }
 
         public class Directory
         {
             public Directory Parent { get; private set; }
-            public string FullName => Parent?.Name + Name;
+            public string FullName =>$"{Parent?.Name} {Name}".Trim();
             public string Name { get; private set; }
             public List<Directory> SubDirectories { get; private set; }
             public List<File> Files { get; private set; }
