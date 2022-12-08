@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using SharedUtility;
+using Unity.VisualScripting.ReorderableList;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -45,8 +46,64 @@ namespace Scenes.Day_08
             
             //Log the number of trees visible
             Debug.Log($"The trees visible are: {treesVisible}");
+
+
+            Vector2Int tallestTree = new Vector2Int();
+            int score = -1;
+            for (int row = 0; row < height; row++)
+            {
+                for (int column = 0; column < width; column++)
+                {
+                    int newScore = TreeVisibilityScore(row, column, inputs);
+                    if (newScore > score)
+                    {
+                        score = newScore;
+                        tallestTree = new Vector2Int(column, row);
+                    }
+                }
+            }
+            
+            Debug.Log($"The visibility score of the best tree is {score}");
         }
 
+        int TreeVisibilityScore(int yIndex, int xIndex, string[] inputGrid)
+        {
+            int treeValue = int.Parse(inputGrid[yIndex][xIndex].ToString());
+            Vector2Int[] directions = new[]
+            {
+                new Vector2Int(0, 1),
+                new Vector2Int(0, -1),
+                new Vector2Int(1, 0),
+                new Vector2Int(-1, 0),
+            };
+
+            List<int> viewingDistances = new List<int>();
+            foreach (Vector2Int direction in directions)
+            {
+                int i = 1;
+                Vector2Int directionVector = direction;
+                while ((inputGrid.Length < (yIndex + directionVector.y)) &&
+                       (inputGrid[0].Length < (xIndex + directionVector.x)))
+
+                {
+                        
+                    int treeToCompare = int.Parse(inputGrid[yIndex + direction.y][xIndex + direction.x].ToString());
+                    
+                    if (treeToCompare >= treeValue)
+                    {
+                        break;
+                    }
+                    
+                    i++;
+                    directionVector *= i;
+                }
+
+                viewingDistances.Add(i);
+            }
+
+            int result = viewingDistances[0] * viewingDistances[1] * viewingDistances[2] * viewingDistances[3];
+            return result;
+        }
         bool IsTreeVisibleFromEdge(int yIndex, int xIndex, string[] inputGrid)
         {
             int treeValue = int.Parse(inputGrid[yIndex][xIndex].ToString());
