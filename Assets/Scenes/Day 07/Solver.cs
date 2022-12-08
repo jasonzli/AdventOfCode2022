@@ -28,11 +28,14 @@ namespace Scenes.Day_07
         void Process(string[] inputs)
         {
             Dictionary<string, Directory> system = new Dictionary<string, Directory>();
-            Directory activeDirectory = null;
-            int line = 0;
+
+            Dictionary<string, Directory> allDirectories = new Dictionary<string, Directory>();
+            system.Add("/", new Directory("/", null));
+            Directory activeDirectory = system["/"];
+            
             foreach (string command in inputs)
             {
-                line++;
+                
                 string[] commandString = command.Split(' ');
                 if (commandString[0] == "$") //command
                 {
@@ -46,30 +49,30 @@ namespace Scenes.Day_07
                     if (commandString[1] == "cd") // move or create
                     {
 
-                        if (commandString[2] == "/")
-                        {
-                            activeDirectory = new Directory("/", null);
-                            system.Add("/", activeDirectory);
-                            continue;
-                        }
-                        
                         if (commandString[2] == "..") // change active to parent
                         {
-                            Debug.Log($"Line {line}: {command} - {activeDirectory.Parent.Name}");
-                            activeDirectory = activeDirectory.Parent;
+                            if (activeDirectory.Parent == null)
+                            {
+                                activeDirectory = system["/"];
+                            }
+                            else
+                            {
+                                activeDirectory = activeDirectory.Parent;
+                            }
+
+                            continue;
+                        }
+
+                        if (commandString[2] == "/")
+                        {
+                            activeDirectory = system["/"];
                             continue;
                         }
                         
                         // Change to new directory
                         string directoryName = commandString[2];
-                        if (!system.ContainsKey(directoryName))
-                        {
-                            Directory newDirectory = new Directory(directoryName, activeDirectory);
-                            system.Add(directoryName, newDirectory);
-                            activeDirectory?.AddSubdirectory(newDirectory);
-                        }
+                        activeDirectory = activeDirectory.SubDirectories.Find(directory => directory.Name == directoryName);
                         
-                        activeDirectory = system[directoryName];
                     }
                 }
 
@@ -82,22 +85,27 @@ namespace Scenes.Day_07
                 if (commandString[0] == "dir")
                 {
                     string discoveredName = commandString[1];
-                    if (!system.ContainsKey(discoveredName))
+                    // if unable to find the directory in the subdirectories create it and add it to the subdirectories
+                    if (activeDirectory.SubDirectories.Find(directory => directory.Name == discoveredName) == null)
                     {
-                        //create a new directory at this key
-                        system.Add(discoveredName, new Directory(discoveredName,activeDirectory));
+                        Directory newDirectory = new Directory(discoveredName, activeDirectory);
+                        allDirectories.TryAdd(newDirectory.FullName, newDirectory);
+                        activeDirectory.AddSubdirectory(newDirectory);
                     }
-                    activeDirectory.AddSubdirectory(system[discoveredName]);
                 }
             }
 
             // Print the sum of all directories whose size is at most 100000
-            Debug.Log($"Total size: {system.Values.Where(x => x.DirectorySize() <= 100000).Sum(x => x.DirectorySize())}");
+            Debug.Log($"Total size: {system["/"].DirectorySize()}");
+            
+            // Print the sum of all directories from allDirectories whose size is at most 100000
+            Debug.Log($"Total size: {allDirectories.Values.Where(directory => directory.DirectorySize() <= 100000).Sum(directory => directory.DirectorySize())}");
         }
 
         public class Directory
         {
             public Directory Parent { get; private set; }
+            public string FullName => Parent?.Name + Name;
             public string Name { get; private set; }
             public List<Directory> SubDirectories { get; private set; }
             public List<File> Files { get; private set; }
