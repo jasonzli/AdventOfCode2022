@@ -54,7 +54,7 @@ namespace Scenes.Day_08
             {
                 for (int column = 0; column < width; column++)
                 {
-                    int newScore = TreeVisibilityScore(row, column, inputs);
+                    int newScore = DumbTreeVisibilityScore(row, column, inputs);
                     if (newScore > score)
                     {
                         score = newScore;
@@ -64,6 +64,88 @@ namespace Scenes.Day_08
             }
             
             Debug.Log($"The visibility score of the best tree is {score}");
+        }
+
+        int DumbTreeVisibilityScore(int yIndex, int xIndex, string[] inputGrid)
+        {
+            int treeValue = int.Parse(inputGrid[yIndex][xIndex].ToString());
+
+            int width = inputGrid[0].Length;
+            int height = inputGrid.Length;
+
+            int leftScore = 0;
+            for (int i = 1; i <=xIndex; i++)
+            {
+                int nextPosition = xIndex - i;
+                if (nextPosition < 0)
+                {
+                    break;
+                }
+                
+                leftScore++;
+                int tree = int.Parse(inputGrid[yIndex][nextPosition].ToString());
+                if (tree >= treeValue)
+                {
+                    break;
+                }
+
+            }
+            
+            int rightScore = 0;
+            for (int i = 1; i <= width-xIndex; i++)
+            {
+                int nextPosition = xIndex + i;
+                if (nextPosition >= width)
+                {
+                    break;
+                }
+                
+                rightScore++;
+                int tree = int.Parse(inputGrid[yIndex][nextPosition].ToString());
+                if (tree >= treeValue)
+                {
+                    break;
+                }
+
+            }
+
+            int upScore = 0;
+            for (int i = 1; i <= yIndex; i++)
+            {
+                int nextPosition = yIndex - i;
+                if (nextPosition < 0)
+                {
+                    break;
+                }
+                
+                upScore++;
+                int tree = int.Parse(inputGrid[nextPosition][xIndex].ToString());
+                if (tree >= treeValue)
+                {
+                    break;
+                }
+
+            }
+
+            int downScore = 0;
+            for (int i = 1; i <= height - yIndex; i++)
+            {
+                int nextPosition = yIndex + i;
+                if (nextPosition >= height)
+                {
+                    break;
+                }
+                
+                downScore++;
+                int tree = int.Parse(inputGrid[nextPosition][xIndex].ToString());
+                if (tree >= treeValue)
+                {
+                    break;
+                }
+
+            }
+
+            return leftScore * rightScore * upScore * downScore;
         }
 
         int TreeVisibilityScore(int yIndex, int xIndex, string[] inputGrid)
@@ -80,25 +162,28 @@ namespace Scenes.Day_08
             List<int> viewingDistances = new List<int>();
             foreach (Vector2Int direction in directions)
             {
-                int i = 1;
+                int travel = 0;
                 Vector2Int directionVector = direction;
-                while ((inputGrid.Length < (yIndex + directionVector.y)) &&
-                       (inputGrid[0].Length < (xIndex + directionVector.x)))
-
+                Vector2Int currentLocation = new Vector2Int(xIndex, yIndex);
+                Vector2Int nextLocation = currentLocation + directionVector;
+                
+                // While the next location is within the grid
+                while (nextLocation.x >= 0 && nextLocation.x < inputGrid[0].Length && nextLocation.y >= 0 && nextLocation.y < inputGrid.Length)
                 {
-                        
-                    int treeToCompare = int.Parse(inputGrid[yIndex + direction.y][xIndex + direction.x].ToString());
+                    //the next position is in the bounds of the grid, so add to the distance
+                    travel++;
+                    int treeToCompare = int.Parse(inputGrid[nextLocation.y][nextLocation.x].ToString());
                     
                     if (treeToCompare >= treeValue)
                     {
                         break;
                     }
                     
-                    i++;
-                    directionVector *= i;
+                    //move to the next location
+                    nextLocation = direction * travel;
                 }
 
-                viewingDistances.Add(i);
+                viewingDistances.Add(travel);
             }
 
             int result = viewingDistances[0] * viewingDistances[1] * viewingDistances[2] * viewingDistances[3];
