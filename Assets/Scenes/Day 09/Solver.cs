@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using SharedUtility;
+using Unity.VisualScripting;
+using Unity.VisualScripting.Antlr3.Runtime;
 using Unity.VisualScripting.ReorderableList;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -27,7 +29,7 @@ namespace Scenes.Day_09
         void Process(string[] inputs)
         {
             
-            Rope rope = new Rope(Vector2Int.zero,1); // new Rope with length 1
+            Rope rope = new Rope(Vector2Int.zero,9); // new Rope with length 1
 
             foreach (string command in inputs)
             {
@@ -86,10 +88,58 @@ namespace Scenes.Day_09
 
                 if (_tail != null)
                 {
-                    _tail.Follow(_position, currentPosition);
+                    //_tail.Follow(_position, currentPosition);
+                    _tail.FollowVector(_position);
                 }
             }
 
+            private void FollowVector(Vector2Int target)
+            {
+                Vector2Int vectorToTarget = target - _position;// - _position;
+                
+                if (Mathf.Abs(vectorToTarget.x) <= 1 && Mathf.Abs(vectorToTarget.y) <= 1)
+                {
+                    return;
+                }
+
+                //if still axis aligned
+                if (vectorToTarget.x == 0  || vectorToTarget.y == 0 )
+                {
+                    //the just move normally
+                    _position += vectorToTarget / 2;
+                    _visitedPositions.Add(_position);
+                    _tail?.FollowVector(_position);
+                    return;
+                }
+
+                List<Vector2Int> possibleMoves = new List<Vector2Int>
+                {
+                    new Vector2Int(1, 1),
+                    new Vector2Int(1, -1),
+                    new Vector2Int(-1, 1),
+                    new Vector2Int(-1, -1),
+                };
+
+                Vector2Int moveDirection = Vector2Int.zero;
+                float shortestDistance = float.MaxValue;
+
+                foreach (Vector2Int move in possibleMoves)
+                {
+                    Vector2Int candidatePosition = _position + move;
+                    float distance = Vector2Int.Distance(candidatePosition, target);
+                    if (distance < shortestDistance)
+                    {
+                        shortestDistance = distance;
+                        moveDirection = move;
+                    }
+                }
+
+                _position += moveDirection;
+                
+                _visitedPositions.Add(_position);
+                
+                _tail?.FollowVector(_position);
+            }
             public void Follow(Vector2Int target, Vector2Int oldPosition)
             {
                 Vector2Int difference = target - _position;
