@@ -50,66 +50,51 @@ namespace Scenes.Day_10
             Debug.Log($"The register sum is: {register.SpecialSum}");
          
             // Print the register's screenregister in rows of 40 characters
+
             string line = "";
-            for (int i = 0; i < register.ScreenRegister.Count; i++)
+            int spritePixelToDraw = 0;
+            for (int i = 0; i < register.SpriteRegister.Count; i++)
             {
-                if (i % 40 == 0)
+                int spritePosition = register.SpriteRegister[i];
+
+                int currentDrawPosition = i % 40;
+
+                string characterToAdd = ".";
+                if (Math.Abs(spritePosition - currentDrawPosition) <= 1)
                 {
-                    Debug.Log($"{line}");
-                    line = "";
+                    characterToAdd = "#";
                 }
-                line += register.ScreenRegister[i];
+
+                line += characterToAdd;
+                spritePixelToDraw = spritePixelToDraw + 1 % 3;
+                if ((i + 1) % 40 == 0)
+                {
+                    line += "\n";
+                }
             }
+
+            Debug.Log($"{line}");
+            
         }
 
         class Register
         {
             private List<int> _xRegister = new List<int>();
 
+            public List<int> SpriteRegister => _xRegister;
+            
+            
             private int _registerValue = 1;
 
             public int SpecialSum => _xRegister[19]*20 + _xRegister[59]*60 + _xRegister[99]*100 + _xRegister[139]*140 +
                                      _xRegister[179]*180 + _xRegister[219]*220;
 
-            public List<char> ScreenRegister
-            {
-                get { return _screenRegister; }
-            }
-            
-            private int _pixelIndex = 0;
-            private List<char> _screenRegister;
-            private int _screenIndex = 0;
-
             public Register()
             {
-                _screenRegister = new List<char>(239);
             }
 
             public void Cycle()
             {
-                //Is our sprite visible in the cycle
-                
-                int activePixelIndex = _registerValue + _pixelIndex - 1; // shift the pixel Index over
-                _pixelIndex = _pixelIndex + 1 % 3; //loop this pixel index back to 0
-
-                char pixel = '.'; // default is .
-                
-                if (_screenIndex == activePixelIndex)
-                {
-                    pixel = '#'; //sprite is visible so use #
-                }
-                
-                // Add pixel value and increment screen index;                
-                //_screenRegister[_screenIndex] = pixel;
-                _screenRegister.Add(pixel);
-                _screenIndex++;
-                
-                //Loop
-                if (_screenIndex == 239)
-                {
-                    _screenIndex = 0;
-                }
-                
                 //Update the register position
                 _xRegister.Add(_registerValue);
             }
