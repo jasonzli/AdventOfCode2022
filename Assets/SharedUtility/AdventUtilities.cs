@@ -23,6 +23,7 @@ namespace SharedUtility
                 lineSeparators = separators;
             }
             
+            // Create expression
             string[] allLines = inputAsset.text.Split(lineSeparators, System.StringSplitOptions.None);
 
             Debug.Log($"Lines: {allLines.Length}");
