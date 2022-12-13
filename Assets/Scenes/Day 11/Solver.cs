@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using SharedUtility;
 using Unity.VisualScripting;
 using Unity.VisualScripting.Antlr3.Runtime;
@@ -16,11 +17,15 @@ namespace Scenes.Day_11
 
         private string[] _inputLines;
 
+        [SerializeField] private List<string> _separatingCharacters = new List<string>();
+
         void Start()
         {
             _addressableTextAsset.LoadAssetAsync<TextAsset>().Completed += handle =>
             {
-                _inputLines = AdventUtilities.ProcessTextAssetIntoStringArray(handle.Result);
+                //this input is broken by double line breaks
+                _inputLines = AdventUtilities.ProcessTextAssetIntoStringArray(handle.Result, _separatingCharacters.ToArray());
+                
                 Process(_inputLines);
             };
 
@@ -28,7 +33,11 @@ namespace Scenes.Day_11
 
         void Process(string[] inputs)
         {
-            
+            foreach (string input in inputs)
+            {
+                string pattern = @"\r\n\r\n";
+                Debug.Log(Regex.Split(input, pattern).Length);
+            };
         }
 
        
