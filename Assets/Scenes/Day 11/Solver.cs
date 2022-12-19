@@ -110,7 +110,7 @@ namespace Scenes.Day_11
                     switch (mathOperation)
                     {
                         case "+":
-                            return (item.Worry + value) % Monkey.moduloFactor;
+                            return (item.Worry + value) % Monkey.moduloFactor; //this action had to be discovered by trial and error
                         case "*":
                             return (item.Worry * value) % Monkey.moduloFactor;
                         default:

@@ -62,6 +62,10 @@ MonoBehaviour:
     m_Address: Assets/Inputs/Day11.txt
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: 69f94f3292e908e46a3f1e509bc0c82f
+    m_Address: Assets/Inputs/Day12.txt
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 8b796a58d45e0d84c9c74b64b109d886, type: 2}
   m_SchemaSet:
