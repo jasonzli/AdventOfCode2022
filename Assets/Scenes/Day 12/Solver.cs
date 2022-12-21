@@ -1,14 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
-using OpenCover.Framework.Model;
 using SharedUtility;
-using Unity.VisualScripting;
-using Unity.VisualScripting.Antlr3.Runtime;
-using Unity.VisualScripting.ReorderableList;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -37,7 +30,7 @@ namespace Scenes.Day_12
 
         void Process(string[] inputs)
         {
-            GridMap map = new GridMap(inputs);
+            GridMap map = new GridMap(inputs, heightLimit);
             
             Debug.Log($"The shortest steps from starting to end is {map.ConnectStartToEnd()}");
         }
@@ -46,37 +39,60 @@ namespace Scenes.Day_12
         {
             private Dictionary<Vector2Int, int> _map = new Dictionary<Vector2Int, int>();
 
+            private int MapWidth { get; set; }
+            private int MapHeight { get; set; }
+
+            private int HeightLimit;
             private Vector2Int _startingPosition;
             private Vector2Int _endingPosition;
             
             private HashSet<Vector2Int> _unvisitedLocations = new HashSet<Vector2Int>();
 
-            private Dictionary<Vector2Int, LocationDistancePair> _visitedLocations =
-                new Dictionary<Vector2Int, LocationDistancePair>();
+            private Dictionary<Vector2Int, ParentDistancePair> _visitedLocations =
+                new Dictionary<Vector2Int, ParentDistancePair>();
 
-            private struct LocationDistancePair
+            private struct ParentDistancePair
             {
-                private Vector2Int _location;
-                private int _distance;
+                public Vector2Int Location { get; set; }
+                public int Distance { get; set; }
 
-                public Vector2Int Location => _location;
-                public int Distance => _distance;
-            }
-
-            public GridMap(string[] inputMap)
-            {
-                int width = inputMap[0].Length;
-                int height = inputMap.Length;
-
-                for (int y = 0; y < height; y++)
+                public ParentDistancePair(Vector2Int parentLocation, int distance)
                 {
-                    for (int x = 0; x < width; x++)
+                    Distance = distance;
+                    Location = parentLocation;
+                }
+            }
+            
+            private struct FromToDistancePair
+            {
+                public Vector2Int FromLocation;
+                public Vector2Int ToLocation;
+                public int Distance;
+
+                public FromToDistancePair(Vector2Int from, Vector2Int to, int distance)
+                {
+                    FromLocation = from;
+                    ToLocation = to;
+                    Distance = distance;
+                }
+            }
+            public GridMap(string[] inputMap, int heightLimit)
+            {
+
+                //Create map
+                MapWidth = inputMap[0].Length;
+                MapHeight = inputMap.Length;
+                HeightLimit = heightLimit;
+                
+                for (int y = 0; y < MapHeight; y++)
+                {
+                    for (int x = 0; x < MapWidth; x++)
                     {
                         AddPosition(new Vector2Int(x,y), inputMap[y][x]);
                     }
                 }
-                
-                Debug.Log($"Map created with width {width} and height {height}");
+
+                Debug.Log($"Map created with width {MapWidth} and height {MapHeight}");
                 Debug.Log($"Starting Position is {_startingPosition.x}, {_startingPosition.y} and ending position is {_endingPosition.x},{_endingPosition.y}");
             }
             
@@ -88,9 +104,6 @@ namespace Scenes.Day_12
                     return c - 'a'; 
                 }
 
-                //Add to the unvisited locations
-                _unvisitedLocations.Add(mapIndex);
-                
                 // Handle special cases, S and E
                 if (value == 'S')
                 {
@@ -109,33 +122,99 @@ namespace Scenes.Day_12
                 _map.Add(mapIndex, CharToInt(value));
             }
             
-            private struct FromToDistancePair
-            {
-                public Vector2Int FromLocation;
-                public Vector2Int ToLocation;
-                public int Distance;
 
-                public FromToDistancePair(Vector2Int from, Vector2Int to, int distance)
-                {
-                    FromLocation = from;
-                    ToLocation = to;
-                    Distance = distance;
-                }
-            }
             
             public int ConnectStartToEnd()
             {
-
-       
+                //clear visited locations
+                _visitedLocations.Clear();
+                
+                //Create the unvisited locations list
+                _unvisitedLocations = _map.Keys.ToHashSet();
 
                 //Go through all the places in the map until we have found the end point
                 Queue<FromToDistancePair> queue = new Queue<FromToDistancePair>();
+
+                // log the distances
+                int accumulatedDistance = 0;
                 
-                queue.Enqueue(new FromToDistancePair(Vector2Int.zero, _startingPosition, 0));
-                
-                return BreadthFirstSearchMap();
+                // Enqueue the first position, with starting position
+                queue.Enqueue(new FromToDistancePair(Vector2Int.zero, _startingPosition, accumulatedDistance));
+
+                while (queue.Count > 0)
+                {
+                    FromToDistancePair currentPair = queue.Dequeue();
+
+                    Vector2Int currentPosition = currentPair.ToLocation;
+                    
+                    if (_visitedLocations.ContainsKey(currentPosition))
+                    {
+                        //we have already visited this location, so we can skip it
+                        continue;
+                    }
+                    
+                    // Add the position to the visited locations
+                    _visitedLocations.Add(currentPosition,
+                        new ParentDistancePair(currentPair.FromLocation, currentPair.Distance));
+
+                    // Remove from the list of unvisited places
+                    _unvisitedLocations.Remove(currentPosition);
+                    
+                    // Add distance to the accumulated distance
+                    accumulatedDistance = currentPair.Distance + 1;
+                    
+                    // Add all potential places to the queue
+                    AllValidLocationsSurroundingPosition(currentPosition)
+                        .ForEach(nextPosition => 
+                            queue.Enqueue(new FromToDistancePair(currentPosition, nextPosition, accumulatedDistance)));
+                    
+                    
+                }
+
+                return _visitedLocations[_endingPosition].Distance;
             }
 
+            private List<Vector2Int> AllValidLocationsSurroundingPosition(Vector2Int positionToCheck)
+            {
+                List<Vector2Int> validLocations = new List<Vector2Int>();
+                
+                // Check all cardinal directions around validlocation
+                Vector2Int[] directionsToCheck = new Vector2Int[]
+                {
+                    Vector2Int.up,
+                    Vector2Int.down,
+                    Vector2Int.left,
+                    Vector2Int.right
+                };
+
+                foreach (Vector2Int direction in directionsToCheck)
+                {
+                    Vector2Int testPosition = positionToCheck + direction;
+                    
+                    // Skip if the position is out of the map, either <0 or greater than the map size
+                    if (testPosition.x < 0 || testPosition.x >= MapWidth || testPosition.y < 0 || testPosition.y >= MapHeight)
+                    {
+                        continue;
+                    }
+                    
+                    // Skip if the position's height value is greater than the height limit
+                    if (_map[testPosition] - _map[positionToCheck] > HeightLimit)
+                    {
+                        continue;
+                    }
+                    
+                    // Skip if the position is already visited
+                    if (!_unvisitedLocations.Contains(testPosition))
+                    {
+                        continue;
+                    }
+                    
+                    // Add the position to the list of valid locations
+                    validLocations.Add(testPosition);
+                }
+
+                return validLocations;
+            }
             private int BreadthFirstSearchMap()
             {
                 return 0;
