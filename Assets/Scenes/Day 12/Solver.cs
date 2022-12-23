@@ -33,6 +33,8 @@ namespace Scenes.Day_12
             GridMap map = new GridMap(inputs, heightLimit);
             
             Debug.Log($"The shortest steps from starting to end is {map.ConnectStartToEnd()}");
+            
+            Debug.Log($"The shortest path from the End to the floor is {map.ConnectEndToFloor()}");
         }
 
         class GridMap
@@ -51,11 +53,12 @@ namespace Scenes.Day_12
             private Dictionary<Vector2Int, ParentDistancePair> _visitedLocations =
                 new Dictionary<Vector2Int, ParentDistancePair>();
 
+
             private struct ParentDistancePair
             {
                 public Vector2Int Location { get; set; }
                 public int Distance { get; set; }
-
+                
                 public ParentDistancePair(Vector2Int parentLocation, int distance)
                 {
                     Distance = distance;
@@ -94,6 +97,7 @@ namespace Scenes.Day_12
 
                 Debug.Log($"Map created with width {MapWidth} and height {MapHeight}");
                 Debug.Log($"Starting Position is {_startingPosition.x}, {_startingPosition.y} and ending position is {_endingPosition.x},{_endingPosition.y}");
+                Debug.Log($"There is a floor at {_map[Vector2Int.zero]}");
             }
             
             private void AddPosition(Vector2Int mapIndex, char value)
@@ -131,6 +135,7 @@ namespace Scenes.Day_12
                 
                 //Create the unvisited locations list
                 _unvisitedLocations = _map.Keys.ToHashSet();
+
 
                 //Go through all the places in the map until we have found the end point
                 Queue<FromToDistancePair> queue = new Queue<FromToDistancePair>();
@@ -218,6 +223,96 @@ namespace Scenes.Day_12
             private int BreadthFirstSearchMap()
             {
                 return 0;
+            }
+
+            public int ConnectEndToFloor()
+            {
+                //Do a BFS from the End position to the closest floor position.
+
+                Queue<FromToDistancePair> queue = new Queue<FromToDistancePair>();
+
+                queue.Enqueue(new FromToDistancePair(Vector2Int.zero, _endingPosition, 0));
+                _unvisitedLocations = _map.Keys.ToHashSet();
+                _visitedLocations = new Dictionary<Vector2Int, ParentDistancePair>();
+                _startingPosition = Vector2Int.zero;
+
+                int shortestDistance = int.MaxValue;
+                while (queue.Count > 0)
+                {
+                    FromToDistancePair currentLocation = queue.Dequeue();
+
+                    int locationHeight = _map[currentLocation.ToLocation];
+
+                    if (_visitedLocations.ContainsKey(currentLocation.ToLocation))
+                    {
+                        continue;
+                    }
+                    
+                    _visitedLocations.Add(currentLocation.ToLocation,new ParentDistancePair(currentLocation.FromLocation,currentLocation.Distance));
+                    
+                    if (locationHeight == 0 && 
+                        currentLocation.Distance < shortestDistance)
+                    {
+                        //we found the end
+                        shortestDistance = currentLocation.Distance;
+                        _startingPosition = currentLocation.ToLocation;
+                        
+                    }
+
+                    foreach (Vector2Int nextLocation in AddViableLocationsFromPosition(currentLocation.ToLocation))
+                    {
+                        queue.Enqueue(new FromToDistancePair(
+                            currentLocation.ToLocation, 
+                            nextLocation,
+                            currentLocation.Distance + 1));
+                    }
+                    
+                    _unvisitedLocations.Remove(currentLocation.ToLocation);
+                    
+                }
+
+                return _visitedLocations[_startingPosition].Distance;
+            }
+
+            private List<Vector2Int> AddViableLocationsFromPosition(Vector2Int position)
+            {
+                List<Vector2Int> newLocations = new List<Vector2Int>();
+
+                Vector2Int[] directions = new Vector2Int[]
+                {
+                    Vector2Int.down,
+                    Vector2Int.left,
+                    Vector2Int.up,
+                    Vector2Int.right
+                };
+
+                foreach (Vector2Int direction in directions)
+                {
+                    Vector2Int locationToCheck = position + direction;
+
+                    //Location out of bounds, skip
+                    if (locationToCheck.x < 0 || locationToCheck.x >= MapWidth || locationToCheck.y < 0 ||
+                        locationToCheck.y >= MapHeight)
+                    {
+                        continue;
+                    }
+
+                    // Need to make sure we're only going down a step, which is this difference, because we're *one above*
+                    if (_map[locationToCheck] - _map[position] < -1)
+                    {
+                        continue;
+                    }
+                    
+                    //Position is already visited
+                    if (!_unvisitedLocations.Contains(locationToCheck))
+                    {
+                        continue;
+                    }
+                    
+                    newLocations.Add(locationToCheck);
+                }
+
+                return newLocations;
             }
         }
         
