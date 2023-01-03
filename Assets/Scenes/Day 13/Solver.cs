@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using SharedUtility;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -13,16 +14,17 @@ namespace Scenes.Day_13
 
         private string[] _inputLines;
 
+        //Unity automatically will escape your text from a GUI text entry :( annoyingfire pu
         [SerializeField] private List<string> _separatingCharacters = new List<string>();
 
-        [SerializeField] private int heightLimit = 1;
         void Start()
         {
             _addressableTextAsset.LoadAssetAsync<TextAsset>().Completed += handle =>
             {
                 //this input is broken by double line breaks
-                _inputLines = AdventUtilities.ProcessTextAssetIntoStringArray(handle.Result, _separatingCharacters.ToArray());
+                _inputLines = AdventUtilities.RegexProcessTextAssetIntoStringArray(handle.Result, _separatingCharacters.ToArray());
                 
+                // Use Regex for two line separation, in the future use a regex approach anyway
                 Process(_inputLines);
             };
 
@@ -30,9 +32,17 @@ namespace Scenes.Day_13
 
         void Process(string[] inputs)
         {
+            Debug.Log($"How many line pairs are there? {inputs.Length}");
+
+            string[] inputsWithoutPatterns = inputs.Where(x => x != "\n\n").ToArray();
+            
+            Debug.Log($"How many line pairs are there after filter? {inputsWithoutPatterns.Length}");
+            
+            //now you can process the text
             
         }
-
+        
+        
         
     }
 }
